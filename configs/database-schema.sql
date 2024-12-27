@@ -1,0 +1,114 @@
+-- Create Users Table
+CREATE TABLE Users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  image VARCHAR(255),
+  cover VARCHAR(255),
+  bio TEXT,
+  skills TEXT,
+  social_media_link TEXT,
+  community_user BOOLEAN DEFAULT FALSE,
+  role ENUM('admin', 'user', 'moderator') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create Communities Table
+CREATE TABLE Community (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  image VARCHAR(255),
+  cover VARCHAR(255),
+  tags TEXT,
+  rules TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create Companies Table
+CREATE TABLE Companies (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  number_of_employees INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create Jobs Table
+CREATE TABLE Jobs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  job_type ENUM('full-time', 'part-time', 'internship', 'contract') NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  salary DECIMAL(10, 2),
+  requirements TEXT,
+  owner_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES Companies(id)
+);
+
+-- Create Applications Table
+CREATE TABLE Applications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  job_id INT NOT NULL,
+  cover_letter TEXT,
+  resume VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES Users(id),
+  FOREIGN KEY (job_id) REFERENCES Jobs(id)
+);
+
+-- Create Posts Table
+CREATE TABLE Post (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  body TEXT NOT NULL,
+  image VARCHAR(255),
+  video VARCHAR(255),
+  cover VARCHAR(255),
+  pinned BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+
+-- Create Comments Table
+CREATE TABLE Comment (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  post_id INT NOT NULL,
+  body TEXT NOT NULL,
+  number_of_likes INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES Users(id),
+  FOREIGN KEY (post_id) REFERENCES Posts(id)
+);
+
+-- Create Events Table
+CREATE TABLE Events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  cover VARCHAR(255),
+  description TEXT,
+  date DATE NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  owner_id INT NOT NULL,
+  url VARCHAR(255),
+  price DECIMAL(10, 2),
+  FOREIGN KEY (user_id) REFERENCES Users(id),
+  FOREIGN KEY (owner_id) REFERENCES Companies(id)
+);
