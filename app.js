@@ -2,7 +2,6 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import verifyUser from './middleware/verifyUser.js'
-import roles from './configs/roles.js'
 import dotenv from 'dotenv'
 // import { createServer } from 'http'
 // import { Server } from 'socket.io'
@@ -13,6 +12,8 @@ import jobRoutes from './routes/jobRoutes.js'
 import postCommentRoutes from './routes/postCommentRoutes.js'
 import communityRoutes from './routes/communityRoutes.js'
 import eventRoutes from './routes/eventRoutes.js'
+import roles from './middleware/roles.js'
+
 
 const app = express()
 app.use(bodyParser.json())
