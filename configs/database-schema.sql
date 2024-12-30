@@ -1,4 +1,4 @@
--- Create Users Table
+--  Users Table
 CREATE TABLE Users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE Users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Communities Table
+--  Communities Table
 CREATE TABLE Community (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE Community (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Companies Table
+-- Companies Table
 CREATE TABLE Companies (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE Companies (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Jobs Table
+-- Jobs Table
 CREATE TABLE Jobs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE Jobs (
   FOREIGN KEY (owner_id) REFERENCES Companies(id)
 );
 
--- Create Applications Table
+-- Applications Table
 CREATE TABLE Applications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE Applications (
   FOREIGN KEY (job_id) REFERENCES Jobs(id)
 );
 
--- Create Posts Table
+--  Posts Table
 CREATE TABLE Post (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE Post (
   FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
--- Create Comments Table
+--  Comments Table
 CREATE TABLE Comment (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE Comment (
   FOREIGN KEY (post_id) REFERENCES Posts(id)
 );
 
--- Create Events Table
+-- Events Table
 CREATE TABLE Events (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -112,3 +112,15 @@ CREATE TABLE Events (
   FOREIGN KEY (user_id) REFERENCES Users(id),
   FOREIGN KEY (owner_id) REFERENCES Companies(id)
 );
+-- Temporary email-verfications table
+CREATE TABLE email_verifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

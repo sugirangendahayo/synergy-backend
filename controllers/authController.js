@@ -1,20 +1,27 @@
 import bcrypt from "bcrypt";
+import express from 'express'
 import db from "../configs/db.js";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
-import roles from "../configs/roles.js";
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+import roles from "../middleware/roles.js";
 
+
+const app = express()
 app.use(cookieParser());
-
-const signup = (req, res) => {
+ 
+const signup = async (req, res) => {
   const { username, first_name, last_name, email, password } = req.body;
 
   if (!first_name || !last_name || !email || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Check if the user already exists in the database
-  db.query("SELECT * FROM users WHERE email = ?",[email],
+  // Check if the user already exists
+  db.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
     async (err, results) => {
       if (err) {
         console.log("Error:", err);
@@ -25,29 +32,130 @@ const signup = (req, res) => {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      // Hash the password before saving
+      // Generate verification token
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Insert the new user into the database
+      // Save user details temporarily in `email_verifications` table
       db.query(
-        "INSERT INTO users (username, first_name, last_name, email, password) VALUES (?, ?, ?, ? ,?)",
-        [username, first_name, last_name, email, hashedPassword],
-        (err, results) => {
+        "INSERT INTO email_verifications (username, first_name, last_name, email, password, token) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          username,
+          first_name,
+          last_name,
+          email,
+          hashedPassword,
+          verificationToken,
+        ],
+        (err) => {
           if (err) {
             console.log("Error:", err);
             return res.status(500).json({ message: "Internal server error" });
           }
 
-          return res
-            .status(201)
-            .json({ message: "User registered successfully" });
+          // Send the verification email
+          const verificationLink = `http://localhost:8085/verify-email?token=${verificationToken}`;
+          const transporter = nodemailer.createTransport({
+            service: "Gmail",
+            auth: {
+              user: process.env.EMAIL,
+              pass: process.env.EMAIL_PASSWORD,
+            },
+          });
+
+          const mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: "Verify Your Email",
+            text: `Click the link to verify your email: ${verificationLink}`,
+          };
+
+          transporter.sendMail(mailOptions, (err) => {
+            if (err) {
+              console.log("Error sending email:", err);
+              return res.status(500).json({ message: "Error sending email" });
+            }
+
+            return res
+              .status(200)
+              .json({
+                message: "Verification email sent. Please check your inbox.",
+              });
+          });
         }
       );
     }
   );
 };
 
-export const login = async (req, res) => {
+const verifyEmail = (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ message: "Invalid or missing token" });
+  }
+
+  // Check the token in the email_verifications table
+  db.query(
+    "SELECT * FROM email_verifications WHERE token = ?",
+    [token],
+    (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+
+      if (results.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "Invalid token or user not found" });
+      }
+
+      const user = results[0];
+
+      // Move the user to the `users` table
+      db.query(
+        "INSERT INTO users (username, first_name, last_name, email, password, email_verified) VALUES (?, ?, ?, ?, ?, 1)",
+        [
+          user.username,
+          user.first_name,
+          user.last_name,
+          user.email,
+          user.password,
+        ],
+        (err) => {
+          if (err) {
+            console.error("Error moving user to users table:", err);
+            return res.status(500).json({ message: "Internal server error" });
+          }
+
+          db.query(
+            "DELETE FROM email_verifications WHERE token = ?",
+            [token],
+            (err) => {
+              if (err) {
+                console.error("Error deleting verification entry:", err);
+                return res
+                  .status(500)
+                  .json({ message: "Internal server error" });
+              }
+
+              res
+                .status(200)
+                .json({
+                  message: "Email verified successfully! You can now log in.",
+                });
+            }
+          );
+        }
+      );
+    }
+  );
+};
+
+
+const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -74,9 +182,9 @@ export const login = async (req, res) => {
         return res.status(401).json({ Error: "Invalid credentials" });
       }
 
-      const hisRole = roles.USER;
+      
       const token = jwt.sign(
-        { email: user.email, role: hisRole },
+        { email: user.email, role: roles.USER },
         "jwt-secret-key",
         { expiresIn: "1d" }
       );
@@ -93,4 +201,4 @@ export const login = async (req, res) => {
   }
 };
 
-export default signup;
+export {signup , verifyEmail, login};
